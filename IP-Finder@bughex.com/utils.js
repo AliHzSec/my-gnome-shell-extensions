@@ -3,21 +3,16 @@ import GLib from 'gi://GLib';
 import Soup from 'gi://Soup';
 
 Gio._promisify(Soup.Session.prototype, 'send_and_read_async');
-Gio._promisify(Gio.File.prototype, 'replace_contents_bytes_async', 'replace_contents_finish');
 
 // API configuration with fallback order
+// Only fetching IP address and country code to keep it lightweight
 const API_ENDPOINTS = [
     {
         name: 'ip-api.com',
-        url: 'http://ip-api.com/json',
+        url: 'http://ip-api.com/json?fields=query,countryCode',
         fieldMap: {
             ip: 'query',
-            country: 'country',
             countryCode: 'countryCode',
-            city: 'city',
-            region: 'regionName',
-            isp: 'isp',
-            timezone: 'timezone',
         },
     },
     {
@@ -25,12 +20,7 @@ const API_ENDPOINTS = [
         url: 'https://api.my-ip.io/v2/ip.json',
         fieldMap: {
             ip: 'ip',
-            country: 'country.name',
             countryCode: 'country.code',
-            city: null,
-            region: null,
-            isp: 'asn.name',
-            timezone: 'timeZone',
         },
     },
     {
@@ -38,12 +28,7 @@ const API_ENDPOINTS = [
         url: 'https://ifconfig.co/json',
         fieldMap: {
             ip: 'ip',
-            country: 'country',
             countryCode: 'country_iso',
-            city: null,
-            region: null,
-            isp: 'asn_org',
-            timezone: 'time_zone',
         },
     },
 ];
@@ -51,7 +36,7 @@ const API_ENDPOINTS = [
 /**
  * Get nested property value from object using dot notation
  * @param {object} obj - The object to search
- * @param {string} path - The path in dot notation (e.g., 'country.name')
+ * @param {string} path - The path in dot notation (e.g., 'country.code')
  * @returns {any} The value or undefined
  */
 function getNestedValue(obj, path) {
@@ -82,11 +67,11 @@ function normalizeApiResponse(rawData, fieldMap) {
 
 /**
  * Fetch IP details with fallback to multiple API sources
+ * Only fetches IP address and country code to minimize data transfer
  * @param {Soup.Session} session
- * @param {string} extensionPath - Path to extension directory for loading countries.json
  * @returns {{data: object | null, error: string | null, apiUsed: string | null}} object containing the data of the IP details or error message on fail
  */
-export async function getIPDetails(session, extensionPath) {
+export async function getIPDetails(session) {
     const USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
     let lastError = null;
@@ -128,52 +113,4 @@ export async function getIPDetails(session, extensionPath) {
     // All APIs failed
     console.log('IP-Finder: All API sources exhausted');
     return {error: lastError || 'All API sources failed'};
-}
-
-/**
- *
- * @param {Array} coordinates
- * @param {int} zoom
- */
-export function getMapTileInfo(coordinates, zoom) {
-    const [lat, lon] = coordinates.split(', ').map(Number);
-    const xTile = Math.floor((lon + 180.0) / 360.0 * (1 << zoom));
-    const yTile = Math.floor((1.0 - Math.log(Math.tan(lat * Math.PI / 180.0) + 1.0 / Math.cos(lat * Math.PI / 180.0)) / Math.PI) / 2.0 * (1 << zoom));
-
-    return {zoom, xTile, yTile};
-}
-
-/**
- *
- * @param {Soup.Session} session
- * @param {object} soupParams
- * @param {string} extensionPath
- * @param {string} tileInfo
- * @returns {{file: Gio.File | null, error: string | null}} object containing the map tile file or error message on fail
- */
-export async function getMapTile(session, soupParams, extensionPath, tileInfo) {
-    const file = Gio.file_new_for_path(`${extensionPath}/icons/latest_map.png`);
-
-    const message = Soup.Message.new_from_encoded_form(
-        'GET',
-        `https://a.tile.openstreetmap.org/${tileInfo}.png`,
-        Soup.form_encode_hash(soupParams)
-    );
-
-    let data;
-    try {
-        const bytes = await session.send_and_read_async(message, GLib.PRIORITY_DEFAULT, null);
-
-        if (message.statusCode === Soup.Status.OK) {
-            data = bytes.get_data();
-            const [success, etag_] = await file.replace_contents_bytes_async(data, null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null);
-            return success ? {file} : {error: 'Error replacing map tile file.'};
-        } else {
-            console.log(`IP-Finder getMapTile() failed with status code - ${message.statusCode}`);
-            return {error: message.statusCode};
-        }
-    } catch (e) {
-        console.log(`IP-Finder getMapTile() error - ${e}`);
-        return {error: message.statusCode};
-    }
 }

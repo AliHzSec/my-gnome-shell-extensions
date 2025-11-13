@@ -2,112 +2,36 @@
  * Name: SpeedMeter: Internet Speed Meter
  * Description: A simple and minimal internet speed meter extension for Gnome Shell.
  * Author: Ali Hamidi
- * GitHub: https://github.com/AliHz1337
+ * GitHub: https://github.com/AliHzSec
  * License: GPLv3.0
- *
- * Note: All class names are prefixed with 'speedmeter-' to prevent conflicts
- * with other extensions and system styles.
  */
 
+@font-face {
+    font-family: 'Inter';
+    src: url('fonts/Inter_24pt-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 /* ====================================================================
-   PANEL LABEL - Speed display in the top panel
+    PANEL LABEL - Speed display in the top panel
    ==================================================================== */
 
 .speedmeter-speed-label {
-    font-family: monospace;
+    font-family: 'Inter', sans-serif;
     font-size: 11pt;
     min-width: 220px;
     text-align: center;
     padding: 0 8px;
 }
 
-/* ====================================================================
-   POPUP MENU - Network information container
-   ==================================================================== */
-
-.speedmeter-network-info-box {
-    padding: 12px;
-    min-width: 380px;
-}
-
-.speedmeter-network-info-title {
-    font-size: 13pt;
-    margin-bottom: 8px;
-    text-align: center;
-}
 
 /* ====================================================================
-   NETWORK INFORMATION SECTIONS
+    RESPONSIVE ADJUSTMENTS
    ==================================================================== */
 
-.speedmeter-network-section-title {
-    font-size: 11pt;
-    color: #4fc3f7;
-    margin-top: 4px;
-    margin-bottom: 4px;
-    padding-left: 8px;
-}
-
-/* ====================================================================
-   INFORMATION ROWS - Key-value pairs
-   ==================================================================== */
-
-.speedmeter-network-info-key {
-    min-width: 120px;
-    color: #888888;
-}
-
-.speedmeter-network-info-value {
-    color: #ffffff;
-    text-align: right;
-}
-
-/* ====================================================================
-   VPN STATUS INDICATOR
-   ==================================================================== */
-
-.speedmeter-vpn-inactive {
-    color: #ff6b6b;
-}
-
-/* ====================================================================
-   ACTION BUTTONS
-   ==================================================================== */
-
-.speedmeter-button-box {
-    padding: 8px 12px;
-}
-
-.speedmeter-icon-button {
-    background: transparent;
-    border-radius: 4px;
-    padding: 6px;
-    transition: background-color 0.2s ease;
-}
-
-.speedmeter-icon-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.speedmeter-icon-button:active {
-    background-color: rgba(255, 255, 255, 0.15);
-}
-
-.speedmeter-icon-button:focus {
-    outline: none;
-}
-
-/* ====================================================================
-   RESPONSIVE ADJUSTMENTS
-   ==================================================================== */
-
-/* Ensure the menu doesn't overflow on smaller screens */
+/* Ensure the label doesn't overflow on smaller screens */
 @media (max-width: 768px) {
-    .speedmeter-network-info-box {
-        min-width: 320px;
-        padding: 10px;
-    }
-
     .speedmeter-speed-label {
         min-width: 180px;
         font-size: 10pt;
